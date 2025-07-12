@@ -1,6 +1,5 @@
 package com.bsru;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -108,13 +107,15 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
     // --- Command and Tab-Completion ---
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage("This command can only be run by a player.");
-            return true;
-        }
+        // [แก้ไข] ลบการตรวจสอบว่าเป็น Player หรือไม่จากตรงนี้
+        // เพื่อให้ Console สามารถใช้คำสั่งบางอย่างได้
 
         if (args.length == 0) {
-            // [แก้ไข] แสดงข้อมูลปลั๊กอินเมื่อใช้คำสั่ง /bsrucrates เฉยๆ
+            // คำสั่ง /bsrucrates เฉยๆ ยังต้องมาจากผู้เล่น
+            if (!(sender instanceof Player p)) {
+                sender.sendMessage("Please use /bsrucrates help to see available commands.");
+                return true;
+            }
             p.sendMessage(formatColor("&8&m----------------------------------"));
             p.sendMessage(formatColor("&b&l         BsruCrates Plugin"));
             p.sendMessage(formatColor(""));
@@ -129,38 +130,37 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
             return true;
         }
 
-        if (!p.hasPermission("bsrucrates.admin")) {
-            p.sendMessage(getMessage("no_permission"));
+        if (!sender.hasPermission("bsrucrates.admin")) {
+            sender.sendMessage(getMessage("no_permission"));
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
         switch (subCommand) {
-            case "key" -> handleKeyCommand(p, args);
-            case "set" -> handleSetCommand(p, args);
-            case "remove" -> handleRemoveCommand(p);
-            case "additem" -> handleItemCommand(p, args, true);
-            case "removeitem" -> handleItemCommand(p, args, false);
-            case "points" -> handlePointsCommand(p, args);
+            case "key" -> handleKeyCommand(sender, args);
+            case "set" -> handleSetCommand(sender, args);
+            case "remove" -> handleRemoveCommand(sender);
+            case "additem" -> handleItemCommand(sender, args, true);
+            case "removeitem" -> handleItemCommand(sender, args, false);
+            case "points" -> handlePointsCommand(sender, args);
             case "reload" -> {
                 loadConfigs();
-                p.sendMessage(getMessage("reload_success"));
+                sender.sendMessage(getMessage("reload_success"));
             }
-            // [เพิ่ม] คำสั่ง help
             case "help" -> {
-                p.sendMessage(formatColor("&8&m---------- &b&lBsruCrates Help &8&m----------"));
-                p.sendMessage(formatColor("&e/bsrucrates &7- Shows plugin info."));
-                p.sendMessage(formatColor("&e/bsrucrates help &7- Shows this help message."));
-                p.sendMessage(formatColor("&e/bsrucrates reload &7- Reloads all config files."));
-                p.sendMessage(formatColor("&e/bsrucrates key give <player> <type> [amount] &7- Gives a crate key."));
-                p.sendMessage(formatColor("&e/bsrucrates points <give|set|take> <player> <type> <amount> &7- Manages player points."));
-                p.sendMessage(formatColor("&e/bsrucrates set <type> &7- Sets the target block as a crate."));
-                p.sendMessage(formatColor("&e/bsrucrates remove &7- Removes the target crate block."));
-                p.sendMessage(formatColor("&e/bsrucrates additem <type> <slot> &7- Adds the item in your hand to a crate."));
-                p.sendMessage(formatColor("&e/bsrucrates removeitem <type> <slot> &7- Removes an item from a crate."));
-                p.sendMessage(formatColor("&8&m---------------------------------------------"));
+                sender.sendMessage(formatColor("&8&m---------- &b&lBsruCrates Help &8&m----------"));
+                sender.sendMessage(formatColor("&e/bsrucrates &7- Shows plugin info."));
+                sender.sendMessage(formatColor("&e/bsrucrates help &7- Shows this help message."));
+                sender.sendMessage(formatColor("&e/bsrucrates reload &7- Reloads all config files."));
+                sender.sendMessage(formatColor("&e/bsrucrates key give <player> <type> [amount] &7- Gives a crate key."));
+                sender.sendMessage(formatColor("&e/bsrucrates points <give|set|take> <player> <type> <amount> &7- Manages player points."));
+                sender.sendMessage(formatColor("&e/bsrucrates set <type> &7- Sets the target block as a crate."));
+                sender.sendMessage(formatColor("&e/bsrucrates remove &7- Removes the target crate block."));
+                sender.sendMessage(formatColor("&e/bsrucrates additem <type> <slot> &7- Adds the item in your hand to a crate."));
+                sender.sendMessage(formatColor("&e/bsrucrates removeitem <type> <slot> &7- Removes an item from a crate."));
+                sender.sendMessage(formatColor("&8&m---------------------------------------------"));
             }
-            default -> p.sendMessage(ChatColor.GOLD + "Unknown command. Use /bsrucrates help.");
+            default -> sender.sendMessage(ChatColor.GOLD + "Unknown command. Use /bsrucrates help.");
         }
         return true;
     }
@@ -195,8 +195,12 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
     }
 
     // --- Command Handlers ---
-    private void handlePointsCommand(Player p, String[] args) {
+    private void handlePointsCommand(CommandSender sender, String[] args) {
         if (args.length == 1) {
+            if (!(sender instanceof Player p)) {
+                sender.sendMessage(ChatColor.RED + "The console must specify a player to check points: /bsrucrates points <give|set|take> ...");
+                return;
+            }
             p.sendMessage(formatColor("&8&m---------- &b&lYour Crate Points &8&m----------"));
             ConfigurationSection cratesSection = cratesConfig.getConfigurationSection("crates");
             if (cratesSection == null || cratesSection.getKeys(false).isEmpty()) {
@@ -219,44 +223,45 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
         }
 
         if (args.length < 5) {
-            p.sendMessage(ChatColor.RED + "Usage: /bsrucrates points <give|set|take> <player> <type> <amount>");
+            sender.sendMessage(ChatColor.RED + "Usage: /bsrucrates points <give|set|take> <player> <type> <amount>");
             return;
         }
         String operation = args[1].toLowerCase();
         Player target = Bukkit.getPlayer(args[2]);
         if (target == null) {
-            p.sendMessage(getMessage("player_not_found").replace("{player}", args[2]));
+            sender.sendMessage(getMessage("player_not_found").replace("{player}", args[2]));
             return;
         }
         String crateType = args[3].toLowerCase();
         if (cratesConfig.getConfigurationSection("crates." + crateType) == null) {
-            p.sendMessage(getMessage("crate_type_not_found").replace("{type}", args[3]));
+            sender.sendMessage(getMessage("crate_type_not_found").replace("{type}", args[3]));
             return;
         }
         int amount;
         try {
             amount = Integer.parseInt(args[4]);
         } catch (NumberFormatException e) {
-            p.sendMessage(ChatColor.RED + "Amount must be a number.");
+            sender.sendMessage(ChatColor.RED + "Amount must be a number.");
             return;
         }
         switch (operation) {
             case "give" -> {
                 addPoints(target.getUniqueId(), crateType, amount);
-                p.sendMessage(ChatColor.GREEN + "Gave " + amount + " points for crate '" + crateType + "' to " + target.getName());
+                sender.sendMessage(ChatColor.GREEN + "Gave " + amount + " points for crate '" + crateType + "' to " + target.getName());
             }
             case "set" -> {
                 setPoints(target.getUniqueId(), crateType, amount);
-                p.sendMessage(ChatColor.GREEN + "Set points for crate '" + crateType + "' to " + amount + " for " + target.getName());
+                sender.sendMessage(ChatColor.GREEN + "Set points for crate '" + crateType + "' to " + amount + " for " + target.getName());
             }
             case "take" -> {
                 takePoints(target.getUniqueId(), crateType, amount);
-                p.sendMessage(ChatColor.GREEN + "Took " + amount + " points for crate '" + crateType + "' from " + target.getName());
+                sender.sendMessage(ChatColor.GREEN + "Took " + amount + " points for crate '" + crateType + "' from " + target.getName());
             }
-            default -> p.sendMessage(ChatColor.RED + "Unknown operation. Use give, set, or take.");
+            default -> sender.sendMessage(ChatColor.RED + "Unknown operation. Use give, set, or take.");
         }
     }
-    private void handleItemCommand(Player p, String[] args, boolean isAdding) {
+    private void handleItemCommand(CommandSender sender, String[] args, boolean isAdding) {
+        if (!(sender instanceof Player p)) { sender.sendMessage("This command must be run by a player."); return; }
         if (args.length < 3) { p.sendMessage(ChatColor.RED + "Usage: /bsrucrates " + (isAdding ? "additem" : "removeitem") + " <crate_type> <slot>"); return; }
         String crateType = args[1].toLowerCase();
         if (cratesConfig.getConfigurationSection("crates." + crateType) == null) { p.sendMessage(getMessage("crate_type_not_found").replace("{type}", args[1])); return; }
@@ -292,7 +297,7 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
         target.sendMessage(getMessage("key_received").replace("{amount}", String.valueOf(amount)).replace("{key_name}", keyName));
     }
     private void handleSetCommand(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player p)) return;
+        if (!(sender instanceof Player p)) { sender.sendMessage("This command must be run by a player."); return; }
         if (args.length < 2) { p.sendMessage(ChatColor.RED + "Usage: /bsrucrates set <type>"); return; }
         String crateType = args[1].toLowerCase();
         if (cratesConfig.getConfigurationSection("crates." + crateType) == null) { p.sendMessage(getMessage("crate_type_not_found").replace("{type}", args[1])); return; }
@@ -305,7 +310,7 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
         p.sendMessage(getMessage("set_crate_success").replace("{type}", crateType));
     }
     private void handleRemoveCommand(CommandSender sender) {
-        if (!(sender instanceof Player p)) return;
+        if (!(sender instanceof Player p)) { sender.sendMessage("This command must be run by a player."); return; }
         Block targetBlock = p.getTargetBlockExact(5);
         if (targetBlock == null) { p.sendMessage(getMessage("look_at_block")); return; }
         Location loc = targetBlock.getLocation();
@@ -403,7 +408,7 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
         cancelMeta.setDisplayName(formatColor("&c&lCANCEL"));
         cancelMeta.getPersistentDataContainer().set(ACTION_NBT, PersistentDataType.STRING, "cancel");
         cancelButton.setItemMeta(cancelMeta);
-
+        
         confirmGui.setItem(11, cancelButton);
         confirmGui.setItem(15, confirmButton);
 
