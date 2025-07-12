@@ -1,0 +1,36 @@
+crates:
+  vote:
+    gui_title: "&8Vote Crate"
+    gui_rows: 3
+    # ราคาแต้มที่ต้องจ่าย (ถ้าไม่มีกุญแจไอเทม)
+    point_cost: 1
+    key_item:
+      material: "TRIPWIRE_HOOK"
+      name: "&e&lVote Key"
+      lore:
+        - "&7A key obtained from voting."
+        - "&7Use this to open a Vote Crate."
+      enchanted: true
+    rewards:
+      '0':
+        item:
+          ==: org.bukkit.inventory.ItemStack
+          v: 3937
+          type: DIAMOND_SWORD
+          meta:
+            ==: ItemMeta
+            meta-type: UNSPECIFIC
+            display-name: '{"text":"§b§lดาบเพชรสุดคม"}'
+            enchants:
+              minecraft:sharpness: 5
+              minecraft:unbreaking: 3
+  rare:
+    gui_title: "&bRare Crate"
+    gui_rows: 4
+    point_cost: 100
+    key_item:
+      material: "AMETHYST_SHARD"
+      name: "&b&lRare Key"
+      lore:
+        - "&7A rare key with valuable items."
+    rewards: {}

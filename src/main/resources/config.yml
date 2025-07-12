@@ -1,0 +1,22 @@
+messages:
+  prefix: "&8[&bBsruCrates&8] "
+  no_permission: "&cYou don't have permission to use this command."
+  player_not_found: "&cCould not find player '{player}'."
+  crate_type_not_found: "&cCould not find a crate type named '{type}'."
+  key_given: "&aYou have given {amount}x {key_name} &ato {player}."
+  key_received: "&aYou have received {amount}x {key_name}&a!"
+  inventory_full: "&c{player}'s inventory is full. The key(s) were dropped on the ground."
+  set_crate_success: "&aSuccessfully set the block you are looking at as a '{type}' crate."
+  remove_crate_success: "&aSuccessfully removed the crate at this location."
+  not_a_crate: "&cThis block is not a crate."
+  look_at_block: "&cYou must be looking at a block."
+  no_key: "&cYou don't have the required key or enough points to open this crate!"
+  reward_received: "&aYou received {reward_name}&a!"
+  reload_success: "&a Reload config Done"
+
+# [เพิ่ม] การตั้งค่าเสียงใหม่ทั้งหมด
+sounds:
+  select_item: "ui.button.click"
+  cancel_purchase: "entity.villager.no"
+  reward_received: "entity.experience_orb.pickup"
+  no_key: "entity.villager.no"

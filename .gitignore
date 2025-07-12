@@ -1,0 +1,21 @@
+# Compiled output from a Maven build
+/target/
+
+# Log files
+*.log
+logs/
+
+# IDE-specific files
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.bak
+*.tmp
