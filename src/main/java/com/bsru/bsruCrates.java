@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent; // [เพิ่ม] import ที่ต้องใช้
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
@@ -107,11 +108,7 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
     // --- Command and Tab-Completion ---
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // [แก้ไข] ลบการตรวจสอบว่าเป็น Player หรือไม่จากตรงนี้
-        // เพื่อให้ Console สามารถใช้คำสั่งบางอย่างได้
-
         if (args.length == 0) {
-            // คำสั่ง /bsrucrates เฉยๆ ยังต้องมาจากผู้เล่น
             if (!(sender instanceof Player p)) {
                 sender.sendMessage("Please use /bsrucrates help to see available commands.");
                 return true;
@@ -322,6 +319,22 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
     }
 
     // --- Event Handlers & GUI Logic ---
+
+    // [เพิ่ม] Event Handler ใหม่สำหรับป้องกันการวางกุญแจ
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        ItemStack itemInHand = event.getItemInHand();
+        if (itemInHand.hasItemMeta()) {
+            // ตรวจสอบว่าไอเทมมี NBT Tag ของเราฝังอยู่หรือไม่
+            if (itemInHand.getItemMeta().getPersistentDataContainer().has(KEY_TYPE_NBT, PersistentDataType.STRING)) {
+                // ถ้าใช่ ให้ยกเลิกการวาง
+                event.setCancelled(true);
+                Player player = event.getPlayer();
+                player.sendMessage(getMessage("cannot_place_key")); // เราจะเพิ่มข้อความนี้ใน config.yml
+            }
+        }
+    }
+
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
@@ -408,10 +421,9 @@ public class bsruCrates extends JavaPlugin implements TabExecutor, Listener {
         cancelMeta.setDisplayName(formatColor("&c&lCANCEL"));
         cancelMeta.getPersistentDataContainer().set(ACTION_NBT, PersistentDataType.STRING, "cancel");
         cancelButton.setItemMeta(cancelMeta);
-        
-        confirmGui.setItem(11, cancelButton);
-        confirmGui.setItem(15, confirmButton);
 
+        confirmGui.setItem(15, confirmButton);
+        confirmGui.setItem(11, cancelButton);
         player.openInventory(confirmGui);
     }
 
